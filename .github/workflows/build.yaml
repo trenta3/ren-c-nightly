@@ -1,0 +1,99 @@
+name: "Release"
+
+on:
+  push:
+    branches:
+      - '**'
+      - actions
+
+  pull_request:
+    branches:
+      - '*'
+
+  schedule:
+    - cron: '0 0 * * *'
+
+env:
+  app-name: r3
+
+defaults:
+  run:
+    shell: bash -l {0}
+
+jobs:
+  unix:
+    name: "Package *nix"
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os:
+          - ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@main
+        with:
+          repository: metaeducation/ren-c
+          submodules: recursive
+      - name: Get current date
+        run: echo $(date -u "+%F") >> currentDate
+      - name: Read date
+        uses: pCYSl5EDgo/cat@master
+        id: currentDate
+        with:
+          path: currentDate
+          trim: true
+      - name: Download prebuilt
+        run: |
+          binary=$(cat prebuilt/README.md | grep -i r3-linux)
+          wget -O prebuilt/r3 "$binary"
+          chmod +x prebuilt/r3
+      - name: Build Ren-C
+        run: |
+          mkdir build
+          cd build && ../prebuilt/r3 ../make.r config: ../configs/default-config.r debug: asserts optimize: 2
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: ${{ env.app-name }}-${{ steps.currentDate.outputs.text }}-${{ runner.os }}
+          path: build/r3
+
+  upload:
+    name: "Upload"
+    runs-on: ubuntu-latest
+    if: ${{ always() }}
+    needs:
+      - unix
+    steps:
+      - uses: actions/download-artifact@v2
+        with:
+          path: ./assets
+      - name: Display structure of downloaded files
+        run: ls -R
+      - name: Get current date
+        run: echo $(date -u "+%F") >> currentDate
+      - name: Read date
+        uses: pCYSl5EDgo/cat@master
+        id: currentDate
+        with:
+          path: currentDate
+          trim: true
+      - name: Create Release
+        id: create-release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: tag-${{ steps.currentDate.outputs.text }}
+          release_name: Latest nightly @ ${{ steps.currentDate.outputs.text }}
+          body: |
+            Nightly build on ${{ steps.currentDate.outputs.text }}
+          draft: false
+          prerelease: false
+      - name: Upload Release Assets
+        id: upload-release-assets
+        uses: dwenegar/upload-release-assets@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          release_id: ${{ steps.create-release.outputs.id }}
+          assets_path: ./assets
