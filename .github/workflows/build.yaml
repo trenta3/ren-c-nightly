@@ -22,12 +22,20 @@ defaults:
 
 jobs:
   unix:
+    timeout-minutes: 20
     name: "Package *nix"
     runs-on: ${{ matrix.os }}
+    env:
+      LANGUAGE: en_US.UTF-8
+      LANG: en_US.UTF-8
+      LC_ALL: en_US.UTF-8
     strategy:
       matrix:
-        os:
-          - ubuntu-latest
+        include:
+          # - os: ubuntu-latest
+          #   binary: linux-x64
+          - os: macos-latest
+            binary: osx-x64
     steps:
       - name: Checkout
         uses: actions/checkout@main
@@ -42,22 +50,28 @@ jobs:
         with:
           path: currentDate
           trim: true
+      - name: Set Locale
+        if: ${{ matrix.os == 'Linux' }}
+        run: |
+          locale-gen en_US.UTF-8
+          sudo dpkg-reconfigure locales
       - name: Download prebuilt
         run: |
-          binary=$(cat prebuilt/README.md | grep -i r3-linux)
+          binary=$(cat prebuilt/README.md | grep -i ${{ matrix.binary }})
           wget -O prebuilt/r3 "$binary"
           chmod +x prebuilt/r3
       - name: Build Ren-C
         run: |
-          mkdir build
+          mkdir -p build
           cd build && ../prebuilt/r3 ../make.r config: ../configs/default-config.r debug: asserts optimize: 2
       - name: Upload Artifact
         uses: actions/upload-artifact@v1
         with:
-          name: ${{ env.app-name }}-${{ steps.currentDate.outputs.text }}-${{ runner.os }}
+          name: ${{ env.app-name }}-${{ steps.currentDate.outputs.text }}-${{ matrix.binary }}
           path: build/r3
 
   upload:
+    timeout-minutes: 15
     name: "Upload"
     runs-on: ubuntu-latest
     if: ${{ always() }}
