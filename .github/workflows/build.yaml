@@ -32,8 +32,8 @@ jobs:
     strategy:
       matrix:
         include:
-          # - os: ubuntu-latest
-          #   binary: linux-x64
+          - os: ubuntu-latest
+            binary: linux-x64
           - os: macos-latest
             binary: osx-x64
     steps:
@@ -51,7 +51,7 @@ jobs:
           path: currentDate
           trim: true
       - name: Set Locale
-        if: ${{ matrix.os == 'Linux' }}
+        if: ${{ runner.os == 'Linux' }}
         run: |
           locale-gen en_US.UTF-8
           sudo dpkg-reconfigure locales
