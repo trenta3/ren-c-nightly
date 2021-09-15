@@ -30,12 +30,15 @@ jobs:
       LANG: en_US.UTF-8
       LC_ALL: en_US.UTF-8
     strategy:
+      fail-fast: false
       matrix:
         include:
           - os: ubuntu-latest
             binary: linux-x64
           - os: macos-latest
             binary: osx-x64
+          - os: windows-latest
+            binary: windows-x86
     steps:
       - name: Checkout
         uses: actions/checkout@main
