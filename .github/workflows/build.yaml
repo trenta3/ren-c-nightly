@@ -76,6 +76,7 @@ jobs:
         run: |
           mkdir -p build
           cd build && ../prebuilt/r3 ../make.r config: ../configs/default-config.r debug: asserts optimize: 2
+          ls -la
       - name: Upload Artifact
         uses: actions/upload-artifact@v1
         if: ${{ runner.os != 'Windows' }}
