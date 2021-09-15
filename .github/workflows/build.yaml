@@ -78,9 +78,16 @@ jobs:
           cd build && ../prebuilt/r3 ../make.r config: ../configs/default-config.r debug: asserts optimize: 2
       - name: Upload Artifact
         uses: actions/upload-artifact@v1
+        if: ${{ runner.os != 'Windows' }}
         with:
           name: ${{ env.app-name }}-${{ steps.currentDate.outputs.text }}-${{ matrix.binary }}
           path: build/r3
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v1
+        if: ${{ runner.os == 'Windows' }}
+        with:
+          name: ${{ env.app-name }}-${{ steps.currentDate.outputs.text }}-${{ matrix.binary }}
+          path: build/r3.exe
 
   upload:
     timeout-minutes: 15
