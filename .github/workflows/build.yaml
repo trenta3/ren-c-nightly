@@ -40,6 +40,10 @@ jobs:
           - os: windows-latest
             binary: windows-x86
     steps:
+      - name: Disable LF to CRLF Auto Translation in Git
+        run: |
+          git config --global core.autocrlf false
+          git config --global core.eol lf
       - name: Checkout
         uses: actions/checkout@main
         with:
@@ -53,11 +57,13 @@ jobs:
         with:
           path: currentDate
           trim: true
-      - name: Set Locale
+      - name: Set Locale and SHELL
         if: ${{ runner.os == 'Linux' }}
         run: |
           locale-gen en_US.UTF-8
           sudo dpkg-reconfigure locales
+
+          echo "SHELL=/bin/bash" >> $GITHUB_ENV
       - name: Install Wget
         if: ${{ runner.os == 'Windows' }}
         run: choco install -y wget
