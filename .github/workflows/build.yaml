@@ -5,13 +5,11 @@ on:
     branches:
       - '**'
       - actions
-
   pull_request:
     branches:
       - '*'
-
-  schedule:
-    - cron: '0 0 * * *'
+  # schedule:
+  #   - cron: '0 0 * * *'
 
 env:
   app-name: r3
